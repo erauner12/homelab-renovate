@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-@Library('homelab-jenkins-library@main') _
+@Library('homelab@main') _
 
 pipeline {
     agent {
