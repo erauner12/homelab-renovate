@@ -6,6 +6,76 @@ Centralized Renovate configuration for all homelab repositories.
 
 This repository contains the shared Renovate configuration used by the self-hosted Renovate CE deployment in [homelab-k8s](https://github.com/erauner12/homelab-k8s/tree/master/apps/renovate).
 
+## Configuration Architecture
+
+Renovate uses a two-tier configuration system:
+
+### Server-side Config (this repo)
+
+The `renovate.js` file in this repository is the **server-side config** for Renovate CE. It controls:
+
+- Which repositories to scan (`repositories` array)
+- Global package rules applied to ALL repos
+- Platform settings (GitHub)
+- Custom managers for non-standard files
+- Shared behaviors (grouping, scheduling, etc.)
+
+### Per-repo Config (optional)
+
+Each watched repository can optionally have its own `renovate.json` to:
+
+- Override or extend server-side settings
+- Add repo-specific package rules
+- Customize labels, assignees, branch prefixes
+- Enable/disable specific managers
+- Set repo-specific schedules
+
+### Config Hierarchy (lowest to highest priority)
+
+```
+Renovate Defaults → Server Config (this repo) → Per-Repo Config
+```
+
+Later configs override earlier ones, so per-repo settings take precedence.
+
+### Example Setup
+
+| Location | Purpose | Required? |
+|----------|---------|-----------|
+| `homelab-renovate/renovate.js` | Global rules for all 14 repos | Yes |
+| `homelab-k8s/renovate.json` | K8s-specific rules (Helm, kustomize) | Optional |
+| `other-repo/renovate.json` | Repo-specific overrides | Optional |
+
+### Practical Example
+
+**Server config** (applies to ALL repos):
+
+```javascript
+// homelab-renovate/renovate.js
+packageRules: [
+  { groupName: 'github-actions', matchManagers: ['github-actions'] }
+]
+```
+
+**Per-repo override** (only for homelab-k8s):
+
+```json
+// homelab-k8s/renovate.json
+{
+  "extends": ["config:recommended"],
+  "kubernetes": { "fileMatch": ["apps/.+\\.yaml$"] }
+}
+```
+
+### When to Use Each
+
+| Use Server Config For | Use Per-Repo Config For |
+|-----------------------|-------------------------|
+| Rules that apply to all repos | Repo-specific file patterns |
+| Shared package groupings | Custom labels/assignees |
+| Global schedules | Override global settings |
+| Custom managers for common patterns | Repo-specific managers |
+
 ## Managed Repositories
 
 | Repository                                                                        | Description                       |
