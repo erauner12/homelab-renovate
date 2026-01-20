@@ -135,12 +135,14 @@ const hostRules = [
  * Package rules for grouping and automerge behavior.
  */
 const packageRules = [
-  // Group all homelab decoupled components
+  // Group all homelab decoupled components - fast iteration, no stability delay
   {
     description: 'Group homelab decoupled components',
     matchPackagePatterns: ['^erauner/homelab-', '^erauner12/homelab-'],
     groupName: 'homelab-components',
     automerge: false, // Require review for internal components
+    stabilityDays: 0, // No waiting period for internal components
+    ignoreUnstable: false, // Allow pre-release versions (rc, beta, alpha)
   },
 
   // Automerge patch updates for stable dependencies
