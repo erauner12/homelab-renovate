@@ -12,8 +12,6 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
         skipDefaultCheckout(true)
-        ansiColor('xterm')
-        timestamps()
         timeout(time: 10, unit: 'MINUTES')
         disableConcurrentBuilds()
     }
