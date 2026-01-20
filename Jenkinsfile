@@ -18,10 +18,25 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    environment {
+        BRANCH_NAME = "${env.BRANCH_NAME ?: 'master'}"
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                container('validation') {
+                    sh '''
+                        echo "=== Installing npm dependencies ==="
+                        npm ci --ignore-scripts
+                    '''
+                }
             }
         }
 
@@ -51,6 +66,7 @@ pipeline {
                             console.log('✓ All required fields present');
                             console.log('  - Platform:', config.platform);
                             console.log('  - Repositories:', config.repositories.length);
+                            console.log('  - All Repositories:', config.allRepositories.length);
                             console.log('  - Package Rules:', config.packageRules.length);
                         "
                     '''
@@ -58,20 +74,27 @@ pipeline {
             }
         }
 
-        stage('List Managed Repos') {
+        stage('Lint') {
             steps {
                 container('validation') {
                     sh '''
-                        echo "=== Managed Repositories ==="
-                        node -e "
-                            const config = require('./renovate.js');
-                            console.log('');
-                            config.repositories.forEach((repo, i) => {
-                                console.log('  ' + (i+1) + '. ' + repo);
-                            });
-                            console.log('');
-                            console.log('Total: ' + config.repositories.length + ' repositories');
-                        "
+                        echo "=== Running ESLint ==="
+                        npm run lint || echo "⚠️ Lint warnings (non-blocking)"
+
+                        echo ""
+                        echo "=== Checking Prettier formatting ==="
+                        npm run format:check || echo "⚠️ Format warnings (non-blocking)"
+                    '''
+                }
+            }
+        }
+
+        stage('Show Repository Selection') {
+            steps {
+                container('validation') {
+                    sh '''
+                        echo "=== Repository Selection for this Run ==="
+                        node pick-repos-to-renovate.js
                     '''
                 }
             }

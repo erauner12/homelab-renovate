@@ -10,11 +10,17 @@
   "author": "erauner12",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint renovate.js",
-    "validate": "node -c renovate.js && echo 'Config syntax valid'"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "validate": "node -c renovate.js && echo 'Config syntax valid'",
+    "pick-repos": "node pick-repos-to-renovate.js"
   },
   "devDependencies": {
-    "eslint": "^9.0.0"
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "prettier": "^3.0.0"
   },
   "engines": {
     "node": ">=20.0.0"

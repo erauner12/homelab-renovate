@@ -3,13 +3,18 @@
  *
  * This config is used by the self-hosted Renovate CE deployment in homelab-k8s.
  * See: https://github.com/erauner12/homelab-k8s/tree/master/apps/renovate
+ *
+ * Features:
+ * - Random shuffle + slice to avoid timeouts (processes subset at a time)
+ * - RENOVATE_REPO env override for testing specific repos
+ * - Branch-aware behavior (master=all, PR=test repo only)
  */
 
 /**
  * All repositories managed by this Renovate instance.
  * Add new repos here to have them automatically onboarded.
  */
-const repositories = [
+const allRepositories = [
   // Core infrastructure
   'erauner12/homelab-k8s',
   'erauner12/omni',
@@ -19,6 +24,9 @@ const repositories = [
   'erauner12/homelab-smoke',
   'erauner12/homelab-validation-image',
   'erauner12/homelab-go-utils',
+  'erauner12/homelab-jenkins-library',
+  'erauner12/homelab-shadow',
+  'erauner12/homelab-manifest-service',
   'erauner12/backstage-plugins',
 
   // Tools and utilities
@@ -29,6 +37,63 @@ const repositories = [
   // This repo (self-management)
   'erauner12/homelab-renovate',
 ];
+
+/**
+ * Shuffle an array using Fisher-Yates algorithm.
+ * Used to randomize repo processing order to distribute load.
+ */
+function shuffleArray(array) {
+  return array
+    .map((item) => ({ item, order: Math.random() }))
+    .sort((a, b) => a.order - b.order)
+    .map(({ item }) => item);
+}
+
+/**
+ * Determine which repositories to process based on:
+ * 1. RENOVATE_REPO env var override (comma-separated list)
+ * 2. Branch name (master=shuffled subset, PR=test repo only)
+ * 3. RENOVATE_ALL env var to force all repos
+ */
+function getRepositories() {
+  // Override: specific repos via environment variable
+  if (process.env.RENOVATE_REPO) {
+    const repos = process.env.RENOVATE_REPO.split(',').map((r) => r.trim());
+    console.log(`[renovate.js] RENOVATE_REPO override: ${repos.join(', ')}`);
+    return repos;
+  }
+
+  // Force all repos (useful for full runs)
+  if (process.env.RENOVATE_ALL === 'true') {
+    console.log(`[renovate.js] RENOVATE_ALL=true: processing all ${allRepositories.length} repos`);
+    return allRepositories;
+  }
+
+  // Branch-aware behavior
+  const branchName = process.env.BRANCH_NAME || 'master';
+  const isMaster = branchName === 'master' || branchName === 'main';
+
+  if (!isMaster) {
+    // PRs only test against this repo itself
+    const testRepo = 'erauner12/homelab-renovate';
+    console.log(`[renovate.js] PR branch "${branchName}": testing on ${testRepo} only`);
+    return [testRepo];
+  }
+
+  // Master branch: shuffle and take a subset to avoid timeouts
+  // With 14 repos, process ~7 at a time (50%)
+  const reposPerRun = Math.max(5, Math.ceil(allRepositories.length / 2));
+  const shuffled = shuffleArray([...allRepositories]);
+  const selected = shuffled.slice(0, reposPerRun);
+
+  console.log(`[renovate.js] Master branch: processing ${selected.length}/${allRepositories.length} repos (shuffled)`);
+  console.log(`[renovate.js] Selected: ${selected.join(', ')}`);
+
+  return selected;
+}
+
+// Get the repositories for this run
+const repositories = getRepositories();
 
 /**
  * Host rules for private registries.
@@ -193,8 +258,11 @@ module.exports = {
   platform: 'github',
   endpoint: 'https://api.github.com/',
 
-  // Repository list
+  // Repository list (dynamically determined)
   repositories,
+
+  // Export allRepositories for pick-repos script
+  allRepositories,
 
   // Disable autodiscovery - use explicit repo list
   autodiscover: false,
