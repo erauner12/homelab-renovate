@@ -1,0 +1,22 @@
+{
+  "name": "homelab-renovate",
+  "version": "1.0.0",
+  "description": "Centralized Renovate configuration for all homelab repositories",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erauner12/homelab-renovate.git"
+  },
+  "author": "erauner12",
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint renovate.js",
+    "validate": "node -c renovate.js && echo 'Config syntax valid'"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
