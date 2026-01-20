@@ -15,24 +15,18 @@
  * Add new repos here to have them automatically onboarded.
  */
 const allRepositories = [
-  // Core infrastructure
-  'erauner12/homelab-k8s',
-  'erauner12/omni',
-  'erauner12/infrastructure',
+  // Core infrastructure (erauner)
+  'erauner/homelab-k8s',
+  'erauner/omni',
 
-  // Decoupled components (from homelab-k8s)
-  'erauner12/homelab-smoke',
-  'erauner12/homelab-validation-image',
-  'erauner12/homelab-go-utils',
-  'erauner12/homelab-jenkins-library',
-  'erauner12/homelab-shadow',
-  'erauner12/homelab-manifest-service',
-  'erauner12/backstage-plugins',
-
-  // Tools and utilities
-  'erauner12/dotfiles',
-  'erauner12/taskfiles',
-  'erauner12/todoist-mcp',
+  // Decoupled components (erauner)
+  'erauner/homelab-smoke',
+  'erauner/homelab-validation-image',
+  'erauner/homelab-go-utils',
+  'erauner/homelab-jenkins-library',
+  'erauner/homelab-shadow',
+  'erauner/homelab-manifest-service',
+  'erauner/homelab-backstage',
 
   // This repo (self-management)
   'erauner12/homelab-renovate',
@@ -144,7 +138,7 @@ const packageRules = [
   // Group all homelab decoupled components
   {
     description: 'Group homelab decoupled components',
-    matchPackagePatterns: ['^erauner12/homelab-'],
+    matchPackagePatterns: ['^erauner/homelab-', '^erauner12/homelab-'],
     groupName: 'homelab-components',
     automerge: false, // Require review for internal components
   },
