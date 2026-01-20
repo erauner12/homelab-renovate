@@ -2,10 +2,40 @@
 
 @Library('homelab@main') _
 
+// Inline pod template for Node.js validation
+def POD_YAML = '''
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    workload-type: ci-validation
+spec:
+  containers:
+  - name: jnlp
+    image: jenkins/inbound-agent:3355.v388858a_47b_33-3-jdk21
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  - name: node
+    image: node:22-alpine
+    command: ['sleep', '3600']
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+'''
+
 pipeline {
     agent {
         kubernetes {
-            inheritFrom 'validation'
+            yaml POD_YAML
         }
     }
 
@@ -29,7 +59,7 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                container('validation') {
+                container('node') {
                     sh '''
                         echo "=== Installing npm dependencies ==="
                         npm ci --ignore-scripts
@@ -40,7 +70,7 @@ pipeline {
 
         stage('Validate Config') {
             steps {
-                container('validation') {
+                container('node') {
                     sh '''
                         echo "=== Validating renovate.js syntax ==="
                         node -c renovate.js
@@ -48,7 +78,10 @@ pipeline {
 
                         echo ""
                         echo "=== Validating renovate.json syntax ==="
-                        cat renovate.json | jq . > /dev/null
+                        cat renovate.json | jq . > /dev/null || {
+                            echo "jq not available, using node for JSON validation"
+                            node -e "JSON.parse(require('fs').readFileSync('renovate.json'))"
+                        }
                         echo "✓ JSON syntax valid"
 
                         echo ""
@@ -74,7 +107,7 @@ pipeline {
 
         stage('Lint') {
             steps {
-                container('validation') {
+                container('node') {
                     sh '''
                         echo "=== Running ESLint ==="
                         npm run lint || echo "⚠️ Lint warnings (non-blocking)"
@@ -89,7 +122,7 @@ pipeline {
 
         stage('Show Repository Selection') {
             steps {
-                container('validation') {
+                container('node') {
                     sh '''
                         echo "=== Repository Selection for this Run ==="
                         node pick-repos-to-renovate.js
