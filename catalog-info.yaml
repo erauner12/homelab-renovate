@@ -5,7 +5,7 @@ metadata:
   description: Renovate configuration for automated dependency updates across homelab repositories
   annotations:
     github.com/project-slug: erauner/homelab-renovate
-    jenkins.io/job-full-name: libraries/homelab-renovate/main
+    jenkins.io/job-full-name: libraries/homelab-renovate
     homelab.dev/manifest-name: homelab-renovate
   tags:
     - renovate
