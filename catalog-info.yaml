@@ -4,8 +4,8 @@ metadata:
   name: homelab-renovate
   description: Renovate configuration for automated dependency updates across homelab repositories
   annotations:
-    github.com/project-slug: erauner12/homelab-renovate
-    jenkins.io/job-full-name: erauner12/homelab-renovate/main
+    github.com/project-slug: erauner/homelab-renovate
+    jenkins.io/job-full-name: erauner/homelab-renovate/main
     homelab.dev/manifest-name: homelab-renovate
   tags:
     - renovate
@@ -13,9 +13,9 @@ metadata:
     - automation
     - javascript
   links:
-    - url: https://github.com/erauner12/homelab-renovate
+    - url: https://github.com/erauner/homelab-renovate
       title: GitHub Repository
-    - url: https://jenkins.erauner.dev/job/erauner12/job/homelab-renovate/job/main/
+    - url: https://jenkins.erauner.dev/job/erauner/job/homelab-renovate/job/main/
       title: CI Pipeline
 spec:
   type: library
